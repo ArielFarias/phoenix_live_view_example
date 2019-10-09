@@ -4,10 +4,27 @@ defmodule DemoWeb.ClockLive do
 
   def render(assigns) do
     ~L"""
-    <div>
-      <h2>It's <%= strftime!(@date, "%r") %></h2>
-      <%= live_render(@socket, DemoWeb.ImageLive, id: "image") %>
-    </div>
+    <%= inspect(@params) %>
+    <%= for {{_k, v}, index} <- Enum.with_index(@params) do %>
+
+    <%= if index == 0 do %>
+        <div>
+          <h2>It's <%= strftime!(v, "%r") %></h2>
+          <%= live_render(@socket, DemoWeb.ImageLive, id: "image") %>
+        <div>
+
+    <% else %>
+
+        <div>
+          <h1 phx-click="boom">The count is: <span id="val" phx-hook="Count" phx-update="ignore"><%= v %></a></h1>
+          <%= v %>
+          <button phx-click="boom" class="alert-danger">BOOM</button>
+          <button phx-click="dec">-</button>
+          <button phx-click="inc" phx-debounce="1000">+</button>
+        </div>
+
+      <% end %>
+    <% end %>
     """
   end
 
@@ -25,7 +42,16 @@ defmodule DemoWeb.ClockLive do
     {:noreply, socket}
   end
 
-  defp put_date(socket) do
-    assign(socket, date: :calendar.local_time())
+  def handle_event("inc", _, socket) do
+    {:noreply, update(socket, :params, fn [{_, _}, {_, value}] -> value = v + 1 end)}
   end
+
+  def handle_event("dec", _, socket) do
+    {:noreply, update(socket, {:counter, :val}, fn {k, v} -> v = v - 1 end)}
+  end
+
+  defp put_date(socket) do
+    assign(socket, params: [date: :calendar.local_time(), counter: 10])
+  end
+
 end
