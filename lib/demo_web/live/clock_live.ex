@@ -4,34 +4,25 @@ defmodule DemoWeb.ClockLive do
 
   def render(assigns) do
     ~L"""
-    <%= inspect(@params) %>
-    <%= for {{_k, v}, index} <- Enum.with_index(@params) do %>
+      <div>
+        <h2>It's <%= strftime!(@date, "%r") %></h2>
+      </div>
 
-    <%= if index == 0 do %>
-        <div>
-          <h2>It's <%= strftime!(v, "%r") %></h2>
-          <%= live_render(@socket, DemoWeb.ImageLive, id: "image") %>
-        <div>
-
-    <% else %>
-
-        <div>
-          <h1 phx-click="boom">The count is: <span id="val" phx-hook="Count" phx-update="ignore"><%= v %></a></h1>
-          <%= v %>
-          <button phx-click="boom" class="alert-danger">BOOM</button>
-          <button phx-click="dec">-</button>
-          <button phx-click="inc" phx-debounce="1000">+</button>
-        </div>
-
-      <% end %>
-    <% end %>
+      <div>
+      <h1 phx-click="boom">The count is: <span id="val" phx-hook="Count" phx-update="true"><%= @val %></a></h1>
+      <%= @val %>
+      <button phx-click="boom" class="alert-danger">BOOM</button>
+      <button phx-click="dec">-</button>
+      <button phx-click="inc" phx-debounce="1000">+</button>
+    </div>
     """
   end
 
-  def mount(_session, socket) do
+  def mount(session, socket) do
     if connected?(socket), do: :timer.send_interval(1000, self(), :tick)
-
-    {:ok, put_date(socket)}
+    IO.inspect session
+    IO.inspect socket
+    {:ok, put_assigns(session, socket)}
   end
 
   def handle_info(:tick, socket) do
@@ -43,15 +34,21 @@ defmodule DemoWeb.ClockLive do
   end
 
   def handle_event("inc", _, socket) do
-    {:noreply, update(socket, :params, fn [{_, _}, {_, value}] -> value = v + 1 end)}
+    {:noreply, update(socket, :val, &(&1 + 1))}
   end
 
   def handle_event("dec", _, socket) do
-    {:noreply, update(socket, {:counter, :val}, fn {k, v} -> v = v - 1 end)}
+    {:noreply, update(socket, :val, &(&1 - 1))}
   end
 
   defp put_date(socket) do
-    assign(socket, params: [date: :calendar.local_time(), counter: 10])
+    assign(socket, date: :calendar.local_time())
+  end
+
+  defp put_assigns(session, socket) do
+    socket
+    |> assign(date: :calendar.local_time())
+    |> assign(:val, session[:val] || 0)
   end
 
 end

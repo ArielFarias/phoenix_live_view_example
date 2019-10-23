@@ -36,7 +36,7 @@ defmodule DemoWeb.CounterLive do
   def render(assigns) do
     ~L"""
     <div>
-      <h1 phx-click="boom">The count is: <span id="val" phx-hook="Count" phx-update="ignore"><%= @val %></a></h1>
+      <h1 phx-click="boom">The count is: <span id="val" phx-hook="Count" phx-update="true"><%= @val %></a></h1>
       <%= @val %>
       <button phx-click="boom" class="alert-danger">BOOM</button>
       <button phx-click="dec">-</button>
